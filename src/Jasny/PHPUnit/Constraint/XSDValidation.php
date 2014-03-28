@@ -28,7 +28,7 @@ class XSDValidation extends \PHPUnit_Framework_Constraint
      */
     public function toString()
     {
-        return "validates against XSD schema" . ($this->schemaIsXml() ? '' : " " . $this->source);
+        return "validates against XSD schema" . ($this->schemaIsXml() ? '' : " " . $this->schema);
     }
     
     /**
@@ -37,13 +37,21 @@ class XSDValidation extends \PHPUnit_Framework_Constraint
      *
      * This method can be overridden to implement the evaluation algorithm.
      *
-     * @param  \DomDocument|string $other  XML to validate.
+     * @param  \DomDocument|\SimpleXMLElement|string $other  XML to validate.
      * @return boolean
      */
     protected function matches($other)
     {
-        if (!$other instanceof \DOMDocument) $other = \DOMDocument::load($other);
-        return $this->schemaIsXml() ? $other->schemaValidate($this->schema) : $other->schemaValidateSource($this->schema);
+        if ($other instanceof \SimpleXMLElement) {
+            $dom = new \DOMDocument('1.0');
+            $dom->appendChild($dom->importNode(dom_import_simplexml($other), true));
+        } elseif (!$other instanceof \DOMDocument) {
+            $dom = \DOMDocument::load($other);
+        } else {
+            $dom = $other;
+        }
+
+        return $this->schemaIsXml() ? $dom->schemaValidateSource($this->schema) : $dom->schemaValidate($this->schema);
     }
     
     /**
@@ -53,6 +61,6 @@ class XSDValidation extends \PHPUnit_Framework_Constraint
      */
     protected function schemaIsXml()
     {
-        return strpos($this->source, '<') !== false;
+        return strpos($this->schema, '<') !== false;
     }
 }
