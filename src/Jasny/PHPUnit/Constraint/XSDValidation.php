@@ -6,7 +6,17 @@ namespace Jasny\PHPUnit\Constraint;
  */
 class XSDValidation extends \PHPUnit_Framework_Constraint
 {
+    /**
+     * XSD schema filename or source
+     * @var string
+     */
     protected $schema;
+    
+    /**
+     * LibXML errors
+     * @var array
+     */
+    protected $errors = [];
     
     
     /**
@@ -19,16 +29,18 @@ class XSDValidation extends \PHPUnit_Framework_Constraint
         parent::__construct();
         
         $this->schema = $schema;
+        if (!$this->schemaIsXml() && !file_exists($this->schema))
+            throw new \Exception("Schema {$this->schema} doesn't exist");
     }
     
     /**
-     * Returns a string representation of the constraint.
-     *
+     * Check if schema contains a '<' character.
+     * 
      * @return string
      */
-    public function toString()
+    protected function schemaIsXml()
     {
-        return "validates against XSD schema" . ($this->schemaIsXml() ? '' : " " . $this->schema);
+        return strpos($this->schema, '<') !== false;
     }
     
     /**
@@ -42,25 +54,72 @@ class XSDValidation extends \PHPUnit_Framework_Constraint
      */
     protected function matches($other)
     {
+        libxml_use_internal_errors(true);
+        
         if ($other instanceof \SimpleXMLElement) {
             $dom = new \DOMDocument('1.0');
             $dom->appendChild($dom->importNode(dom_import_simplexml($other), true));
-        } elseif (!$other instanceof \DOMDocument) {
-            $dom = \DOMDocument::load($other);
-        } else {
+        } elseif ($other instanceof \DOMDocument) {
             $dom = $other;
+        } else {
+            $dom = \DOMDocument::load($other);
         }
 
-        return $this->schemaIsXml() ? $dom->schemaValidateSource($this->schema) : $dom->schemaValidate($this->schema);
+        $ret = $this->schemaIsXml() ? $dom->schemaValidateSource($this->schema) : $dom->schemaValidate($this->schema);
+        if (!$ret) $this->errors = libxml_get_errors();
+        
+        return $ret;
     }
     
     /**
-     * Check if schema contains a '<' character.
-     * 
+     * Return the XML errors as additional failure description
+     *
+     * @param  \DomDocument|\SimpleXMLElement|string $other  (not used)
      * @return string
      */
-    protected function schemaIsXml()
+    protected function additionalFailureDescription($other)
     {
-        return strpos($this->schema, '<') !== false;
+        $desc = '';
+        
+        foreach ($this->errors as $error) {
+            $desc .= " - " . trim($error->message) . "\n";
+        }
+        
+        return $desc;
+    }
+    
+    /**
+     * Returns the description of the failure
+     *
+     * The beginning of failure messages is "Failed asserting that" in most
+     * cases. This method should return the second part of that sentence.
+     *
+     * To provide additional failure information additionalFailureDescription
+     * can be used.
+     *
+     * @param  mixed  $other Evaluated value or object.
+     * @return string
+     */
+    protected function failureDescription($other)
+    {
+        if ($other instanceof \SimpleXMLElement) {
+            $xml = $other->asXML();
+        } elseif ($other instanceof \DOMDocument) {
+            $xml = $other->saveXML();
+        } else {
+            $xml = $other;
+        }
+        
+        return $xml . ' ' . $this->toString();
+    }
+    
+    /**
+     * Returns a string representation of the constraint.
+     *
+     * @return string
+     */
+    public function toString()
+    {
+        return "validates against XSD schema" . ($this->schemaIsXml() ? '' : " '" . basename($this->schema) . "'");
     }
 }
