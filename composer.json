@@ -1,6 +1,7 @@
 {
     "name": "jasny/phpunit-xsdvalidation",
     "description": "XSD schema validation constraint for PHPUnit",
+    "keywords": ["phpunit", "xml", "xsd"],
     "license": "MIT",
     "authors": [
         {
