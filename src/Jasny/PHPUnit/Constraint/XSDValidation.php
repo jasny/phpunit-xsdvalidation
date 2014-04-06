@@ -26,7 +26,7 @@ class XSDValidation extends \PHPUnit_Framework_Constraint
      */
     public function __construct($schema)
     {
-        parent::__construct();
+        if (method_exists(get_parent_class(), '__construct')) parent::__construct();
         
         $this->schema = $schema;
         if (!$this->schemaIsXml() && !file_exists($this->schema))
