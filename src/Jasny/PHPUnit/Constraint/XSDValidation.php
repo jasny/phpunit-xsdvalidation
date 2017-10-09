@@ -22,17 +22,21 @@ class XSDValidation extends Constraint
 
 
     /**
-     * Class constructor
+     * XSDValidation constructor.
      *
      * @param string $schema   filename or source
+     * @throws \Exception
      */
     public function __construct($schema)
     {
-        if (method_exists(get_parent_class(), '__construct')) parent::__construct();
+        if (method_exists(get_parent_class(), '__construct')) {
+            parent::__construct();
+        }
 
         $this->schema = $schema;
-        if (!$this->schemaIsXml() && !file_exists($this->schema))
+        if (!$this->schemaIsXml() && !file_exists($this->schema)) {
             throw new \Exception("Schema {$this->schema} doesn't exist");
+        }
     }
 
     /**
@@ -68,7 +72,9 @@ class XSDValidation extends Constraint
         }
 
         $ret = $this->schemaIsXml() ? $dom->schemaValidateSource($this->schema) : $dom->schemaValidate($this->schema);
-        if (!$ret) $this->errors = libxml_get_errors();
+        if (!$ret) {
+            $this->errors = libxml_get_errors();
+        }
 
         return $ret;
     }
