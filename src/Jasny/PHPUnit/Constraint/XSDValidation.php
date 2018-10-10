@@ -68,7 +68,7 @@ class XSDValidation extends Constraint
         } elseif ($other instanceof \DOMDocument) {
             $dom = $other;
         } else {
-            $dom = \DOMDocument::load($other);
+            $dom = (new \DOMDocument)->load($other);
         }
 
         $ret = $this->schemaIsXml() ? $dom->schemaValidateSource($this->schema) : $dom->schemaValidate($this->schema);
