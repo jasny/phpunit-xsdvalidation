@@ -1,5 +1,5 @@
 {
-    "name": "jasny/phpunit-xsdvalidation",
+    "name": "portrino/phpunit-xsdvalidation",
     "description": "XSD schema validation constraint for PHPUnit",
     "keywords": ["phpunit", "xml", "xsd"],
     "license": "MIT",
@@ -7,10 +7,14 @@
         {
             "name": "Arnold Daniels",
             "email": "arnold@jasny.net"
+        },
+        {
+            "name": "André Wuttig",
+            "email": "andr.wuttig@gmail.com"
         }
     ],
     "suggest": {
-        "phpunit/phpunit": "This package can only be used with PHPUnit"
+        "phpunit/phpunit": "~6.4"
     },
     "autoload": {
         "psr-0": {
